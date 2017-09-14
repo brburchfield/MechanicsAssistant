@@ -27,6 +27,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
     var userModel = ""
     var userVin = ""
     var userYear = ""
+    var userMileage = ""
     var mainService = ""
     var airFilterStatus = ""
     var batteryCablesStatus = ""
@@ -85,6 +86,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
             self.userModel = value?["model"] as? String ?? ""
             self.userYear = value?["year"] as? String ?? ""
             self.userVin = value?["vin"] as? String ?? ""
+            self.userMileage = value?["mileage"] as? String ?? ""
         })
         
         //set statuses from Firebase
@@ -351,7 +353,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                     let dateString = formatter.string(from: Date())
                     
                     //Actually send email
-                    self.sendEmail(subjectString: "\(self.userFirstName) \(self.userLastName)'s vehicle completed", messageBody: "Vehicle Completed\n\nCustomer Name: \(self.userFirstName) \(self.userLastName)\n\nMake: \(self.userMake) | Model: \(self.userModel) | Year: \(self.userYear)\n\nVin Number: \(self.userVin)\n\nCompletion Time: \(dateString)\n\nMain Service Performed: \(self.mainService)\n\nAdditional Notes: \(self.noteText)")
+                    self.sendEmail(subjectString: "\(self.userFirstName) \(self.userLastName)'s vehicle completed", messageBody: "Vehicle Completed\n\nCustomer Name: \(self.userFirstName) \(self.userLastName)\n\nMake: \(self.userMake) | Model: \(self.userModel) | Year: \(self.userYear)\n\nVin Number: \(self.userVin)\n\nCompletion Time: \(dateString)\n\nMain Service Performed: \(self.mainService)\n\nMileage: \(self.userMileage)\n\nAdditional Notes: \(self.noteText)")
                 }
                 
             } else {

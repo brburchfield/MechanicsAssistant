@@ -11,6 +11,15 @@ import Firebase
 import CoreData
 import SystemConfiguration
 
+//String extension to filter all non-digits from input
+extension String {
+    
+    var justDigits: String {
+        return components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .joined()
+    }
+}
+
 class NewVehicleViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var firstNameTextField: UITextField!
@@ -28,6 +37,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var emailTextField:     UITextField!
     @IBOutlet weak var vinTextField:       UITextField!
     @IBOutlet weak var servicesTextField:  UITextField!
+    @IBOutlet weak var mileageTextField: UITextField!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,7 +47,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         self.navigationController?.setNavigationBarHidden(true, animated: true)
         
         displayLookupAlert()
-     
+        
         firstNameTextField.delegate = self
         lastNameTextField.delegate = self
         makeTextField.delegate = self
@@ -53,12 +63,12 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         emailTextField.delegate = self
         vinTextField.delegate = self
         servicesTextField.delegate = self
+        mileageTextField.delegate = self
         
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        
     }
     
     @IBAction func backButtonPressed(_ sender: Any) {
@@ -83,8 +93,11 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         let refPhone = ref.child("phone")
         let refEmail = ref.child("email")
         let refVIN = ref.child("vin")
+        let refMileage = ref.child("mileage")
         let refServices = ref.child("services")
         let refStatuses = ref.child("statuses")
+        let refBusiness = ref.child("business")
+        let refLocation = ref.child("location")
         
         //if apt field is empty, populate it
         if aptTextField.text == "" {
@@ -95,16 +108,110 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         if firstNameTextField.text != "" && lastNameTextField.text != "" && makeTextField.text != "" && modelTextField.text != "" && yearTextField.text != "" && colorTextField.text != "" &&
             addressTextField.text != "" && cityTextField.text != "" && stateTextField.text != "" &&
             zipTextField.text != "" && phoneTextField.text != "" && emailTextField.text != "" &&
-            servicesTextField.text != "" && vinTextField.text != "" {
+            servicesTextField.text != "" && vinTextField.text != "" && mileageTextField.text != "" {
             
             //Create service array from service text field by separating items by commas
-            let serviceArray = servicesTextField.text?.components(separatedBy: ", ")
+            var serviceArray = servicesTextField.text?.components(separatedBy: ", ")
             
-            //...and entered services are equal to or less than 5...
-            if (serviceArray?.count)! <= 5 {
+            //Remove any empty items or items that would duplicate existing services from serviceArray
+            var itemNumber = 0
+            for item in serviceArray! {
+                if item == "Check Air Filter" || item == "Check Battery Cables" || item == "Check Battery Fluid" || item == "Check Belts" || item == "Check Brake Fluid Level" || item == "Check Coolant" || item == "Check Horn" || item == "Check Hoses" || item == "Check Lights" || item == "Check Oil Level" || item == "Check Power Steering Fluid" || item == "Check Tire Pressure" || item == "Check Transmission Fluid Level" || item == "Check Tire Tread Depth" || item == "Check Windshield Washer Fluid" {
+                     serviceArray?.remove(at: itemNumber)
+                }
+                if item.characters.count == 0 || item == "" {
+                    serviceArray?.remove(at: itemNumber)
+                }else{
+                    itemNumber += 1
+                }
+            }
+            
+            //...and entered services are equal to or less than 5 and greater than 0...
+            if (serviceArray?.count)! <= 5 && (serviceArray?.count)! > 0 {
                 
                 //...and device is connected to the internet,
                 if isInternetAvailable() == true {
+                    
+                    //First, remove all non-numeric characters from phone, year, zip, and mileage user inputs
+                    let inputPhoneNumber = self.phoneTextField.text?.justDigits
+                    self.phoneTextField.text = inputPhoneNumber
+                    
+                    let inputYear = self.yearTextField.text?.justDigits
+                    self.yearTextField.text = inputYear
+                    
+                    let inputZip = self.zipTextField.text?.justDigits
+                    self.zipTextField.text = inputZip
+                    
+                    let inputMileage = self.mileageTextField.text?.justDigits
+                    self.mileageTextField.text = inputMileage
+                    
+                    //Then, check if all fields contain correct input
+                    if (firstNameTextField.text?.characters.count)! > 30 || (lastNameTextField.text?.characters.count)! > 30 || (makeTextField.text?.characters.count)! > 23 || (modelTextField.text?.characters.count)! > 20 ||
+                        (yearTextField.text?.characters.count)! != 4 || (colorTextField.text?.characters.count)! > 20 || (aptTextField.text?.characters.count)! > 20 || (cityTextField.text?.characters.count)! > 30 || (stateTextField.text?.characters.count)! > 2 || (addressTextField.text?.characters.count)! > 40 || (zipTextField.text?.characters.count)! != 5 || (phoneTextField.text?.characters.count)! != 10 || isValidEmail(testStr: emailTextField.text!) || (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 || (mileageTextField.text?.characters.count)! > 7 {
+                        
+                        if (firstNameTextField.text?.characters.count)! > 30 {
+                            showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Must be less than 30 characters")
+                        }
+                        
+                        if (lastNameTextField.text?.characters.count)! > 30 {
+                            showTextFieldPlaceholder(textfield: lastNameTextField, placeholderString: "Must be less than 30 characters")
+                        }
+                        
+                        if (makeTextField.text?.characters.count)! > 23 {
+                            showTextFieldPlaceholder(textfield: makeTextField, placeholderString: "Must be less than 23 characters")
+                        }
+                        
+                        if (modelTextField.text?.characters.count)! > 40 {
+                            showTextFieldPlaceholder(textfield: modelTextField, placeholderString: "Make must be less than 40 characters")
+                        }
+                        
+                        if (yearTextField.text?.characters.count)! != 4 {
+                            showTextFieldPlaceholder(textfield: yearTextField, placeholderString: "Must be a 4-digit number")
+                        }
+                        
+                        if (colorTextField.text?.characters.count)! > 20 {
+                            showTextFieldPlaceholder(textfield: colorTextField, placeholderString: "Must be less than 20 characters")
+                        }
+                        
+                        if (addressTextField.text?.characters.count)! > 40 {
+                            showTextFieldPlaceholder(textfield: addressTextField, placeholderString: "Address must be less than 40 characters")
+                        }
+                        
+                        if (aptTextField.text?.characters.count)! > 20 {
+                            showTextFieldPlaceholder(textfield: aptTextField, placeholderString: "Too long")
+                        }
+                        
+                        if (cityTextField.text?.characters.count)! > 30 {
+                            showTextFieldPlaceholder(textfield: cityTextField, placeholderString: "City must be less than 30 characters")
+                        }
+                        
+                        if (stateTextField.text?.characters.count)! > 2 {
+                            showTextFieldPlaceholder(textfield: stateTextField, placeholderString: "AA")
+                        }
+                        
+                        if zipTextField.text?.characters.count != 5 {
+                            showTextFieldPlaceholder(textfield: zipTextField, placeholderString: "5-digits")
+                        }
+                        
+                        if phoneTextField.text?.characters.count != 10 {
+                            showTextFieldPlaceholder(textfield: phoneTextField, placeholderString: "Must be 10-digit number")
+                        }
+                        
+                        if !isValidEmail(testStr: emailTextField.text!) {
+                            showTextFieldPlaceholder(textfield: emailTextField, placeholderString: "Enter a valid email")
+                        }
+                        
+                        if (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 {
+                            showTextFieldPlaceholder(textfield: vinTextField, placeholderString: "VIN must be between 11 and 17 characters")
+                        }
+                        
+                        if (mileageTextField.text?.characters.count)! > 7 {
+                            showTextFieldPlaceholder(textfield: mileageTextField, placeholderString: "Mileage must contain less than 7 characters")
+                        }
+                        
+                        return
+                    }
+                    
                     
                     //set corresponding Firebase reference values to text field data
                     refFirstName.setValue(firstNameTextField.text)
@@ -121,6 +228,9 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     refPhone.setValue(phoneTextField.text)
                     refEmail.setValue(emailTextField.text)
                     refVIN.setValue(vinTextField.text)
+                    refMileage.setValue(mileageTextField.text)
+                    refBusiness.setValue(currentBusinessID)
+                    refLocation.setValue(currentBusinessLocation)
                     
                     //Create multiple items for services (if applicable)
                     let serviceArray = servicesTextField.text?.components(separatedBy: ", ")
@@ -180,26 +290,58 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                 
                 //if number of services entered is greater than five
             }else {
-                showTextFieldPlaceholder(textfield: servicesTextField, placeholderString: "You may only have a max of 5 services")
+                showTextFieldPlaceholder(textfield: servicesTextField, placeholderString: "You may only have a max of 5 services and must have at least one")
             }
             
             //If one or more of the fields are empty (other than apt), show error action (shake).
         } else {
+            if firstNameTextField.text == "" {
+                showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Please Enter First Name")
+            }
+            if lastNameTextField.text == "" {
+                showTextFieldPlaceholder(textfield: lastNameTextField, placeholderString: "Please Enter Last Name")
+            }
+            if makeTextField.text == "" {
+                showTextFieldPlaceholder(textfield: makeTextField, placeholderString: "Please Enter Vehicle Make")
+            }
+            if modelTextField.text == "" {
+                showTextFieldPlaceholder(textfield: modelTextField, placeholderString: "Please Enter Vehicle Model")
+            }
+            if yearTextField.text == "" {
+                showTextFieldPlaceholder(textfield: yearTextField, placeholderString: "Please Enter Vehicle Year")
+            }
+            if colorTextField.text == "" {
+                showTextFieldPlaceholder(textfield: colorTextField, placeholderString: "Please Enter Vehicle Color")
+            }
+            if addressTextField.text == "" {
+                showTextFieldPlaceholder(textfield: addressTextField, placeholderString: "Please Enter Customer Address")
+            }
+            if cityTextField.text == "" {
+                showTextFieldPlaceholder(textfield: cityTextField, placeholderString: "Please Enter Customer City")
+            }
+            if stateTextField.text == "" {
+                showTextFieldPlaceholder(textfield: stateTextField, placeholderString: "Please Enter Customer State")
+            }
+            if zipTextField.text == "" {
+                showTextFieldPlaceholder(textfield: zipTextField, placeholderString: "Please Enter Customer Zip")
+            }
+            if phoneTextField.text == "" {
+                showTextFieldPlaceholder(textfield: phoneTextField, placeholderString: "Please Enter Customer Phone")
+            }
+            if emailTextField.text == "" {
+                showTextFieldPlaceholder(textfield: emailTextField, placeholderString: "Please Enter Customer Email")
+            }
+            if vinTextField.text == "" {
+                showTextFieldPlaceholder(textfield: vinTextField, placeholderString: "Please Enter Vehicle Vin Number")
+            }
             
-            showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Please Enter First Name")
-            showTextFieldPlaceholder(textfield: lastNameTextField, placeholderString: "Please Enter Last Name")
-            showTextFieldPlaceholder(textfield: makeTextField, placeholderString: "Please Enter Vehicle Make")
-            showTextFieldPlaceholder(textfield: modelTextField, placeholderString: "Please Enter Vehicle Model")
-            showTextFieldPlaceholder(textfield: yearTextField, placeholderString: "Please Enter Vehicle Year")
-            showTextFieldPlaceholder(textfield: colorTextField, placeholderString: "Please Enter Vehicle Color")
-            showTextFieldPlaceholder(textfield: addressTextField, placeholderString: "Please Enter Customer Address")
-            showTextFieldPlaceholder(textfield: cityTextField, placeholderString: "Please Enter Customer City")
-            showTextFieldPlaceholder(textfield: stateTextField, placeholderString: "Please Enter Customer State")
-            showTextFieldPlaceholder(textfield: zipTextField, placeholderString: "Please Enter Customer Zip")
-            showTextFieldPlaceholder(textfield: phoneTextField, placeholderString: "Please Enter Customer Phone")
-            showTextFieldPlaceholder(textfield: emailTextField, placeholderString: "Please Enter Customer Email")
-            showTextFieldPlaceholder(textfield: vinTextField, placeholderString: "Please Enter Vehicle Vin Number")
-            showTextFieldPlaceholder(textfield: servicesTextField, placeholderString: "Please Enter Services Required")
+            if servicesTextField.text == "" {
+                showTextFieldPlaceholder(textfield: servicesTextField, placeholderString: "Please Enter Services Required")
+            }
+            
+            if mileageTextField.text == "" {
+                showTextFieldPlaceholder(textfield: mileageTextField, placeholderString: "Please Enter Vehicle Mileage")
+            }
             
         }
         
@@ -223,6 +365,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
             textfield.attributedPlaceholder = NSAttributedString(string: placeholderString, attributes: [NSForegroundColorAttributeName: UIColor.red])
             textfield.layer.add(shake, forKey: nil)
         }
+        
         
     }
     
@@ -289,15 +432,12 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     if value != nil {
                         // Populate text fields and disable interaction to pre-populated fields
                         self.phoneTextField.text = alertFieldText
-                        self.phoneTextField.isUserInteractionEnabled = false
                         self.phoneTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.firstNameTextField.text = value?["firstName"] as? String ?? ""
-                        self.firstNameTextField.isUserInteractionEnabled = false
                         self.firstNameTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.lastNameTextField.text = value?["lastName"] as? String ?? ""
-                        self.lastNameTextField.isUserInteractionEnabled = false
                         self.lastNameTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.addressTextField.text = value?["streetAddress"] as? String ?? ""
@@ -321,14 +461,13 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                         self.zipTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.emailTextField.text = value?["email"] as? String ?? ""
-                        self.emailTextField.isUserInteractionEnabled = false
                         self.emailTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
-                    
+                        
+                        
+                        
                     } else {
-                       self.displayNoCustomerAlert("No Result", alertString: "No such customer has been found. Please try again or create a new customer.")
+                        self.displayNoCustomerAlert("No Result", alertString: "No such customer has been found. Please try again or create a new customer.")
                     }
-                    
-                    
                     
                 })
                 
@@ -356,13 +495,21 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         let alertController = UIAlertController(title: alertTitle, message: alertString, preferredStyle: UIAlertControllerStyle.alert)
         
         let okButton = UIAlertAction(title: "OK", style: .default) { (_) in
-        
+            
             self.displayLookupAlert()
             
         }
         
         alertController.addAction(okButton)
         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    //Function for email validation using regular expression.
+    func isValidEmail(testStr:String) -> Bool {
+        let emailRegularExpression = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+        
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegularExpression)
+        return emailPredicate.evaluate(with: testStr)
     }
     
 }

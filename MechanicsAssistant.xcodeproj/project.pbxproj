@@ -10,6 +10,8 @@
 		6EA43B10B49FD5B77FCC0538 /* Pods_MechanicsAssistantTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2A97717419845D47077065F /* Pods_MechanicsAssistantTests.framework */; };
 		943B85AC1890EA9BEA65FC0A /* Pods_MechanicsAssistantUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A00C8A26557448135EAB3A1 /* Pods_MechanicsAssistantUITests.framework */; };
 		A7DFD1EF8AEB4A0CA3D1D2E7 /* Pods_MechanicsAssistant.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0E19040C2251778470B9B6B9 /* Pods_MechanicsAssistant.framework */; };
+		D40AAD691F65AC80001A65E3 /* AddBusinessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40AAD681F65AC80001A65E3 /* AddBusinessViewController.swift */; };
+		D40AAD6B1F65B1B9001A65E3 /* SignUpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D40AAD6A1F65B1B9001A65E3 /* SignUpViewController.swift */; };
 		D42AD1851F45DE290008C318 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D42AD1841F45DE290008C318 /* GoogleService-Info.plist */; };
 		D4319A1C1F438956002E545A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4319A1B1F438956002E545A /* AppDelegate.swift */; };
 		D4319A1E1F438956002E545A /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4319A1D1F438956002E545A /* LoginViewController.swift */; };
@@ -54,6 +56,8 @@
 		A2A97717419845D47077065F /* Pods_MechanicsAssistantTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MechanicsAssistantTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AF837F042777B6ED54E1C437 /* Pods-MechanicsAssistant.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MechanicsAssistant.release.xcconfig"; path = "Pods/Target Support Files/Pods-MechanicsAssistant/Pods-MechanicsAssistant.release.xcconfig"; sourceTree = "<group>"; };
 		B561802DF03A3BB65F9E31F0 /* Pods-MechanicsAssistantTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MechanicsAssistantTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MechanicsAssistantTests/Pods-MechanicsAssistantTests.debug.xcconfig"; sourceTree = "<group>"; };
+		D40AAD681F65AC80001A65E3 /* AddBusinessViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AddBusinessViewController.swift; sourceTree = "<group>"; };
+		D40AAD6A1F65B1B9001A65E3 /* SignUpViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SignUpViewController.swift; sourceTree = "<group>"; };
 		D42AD1841F45DE290008C318 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		D4319A181F438956002E545A /* MechanicsAssistant.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MechanicsAssistant.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4319A1B1F438956002E545A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -159,6 +163,8 @@
 				D4F5B8531F44C379006E8DF5 /* NewVehicleViewController.swift */,
 				D459CB7F1F4482FB005CFB2F /* ChecklistViewController.swift */,
 				D4C0DD961F4E257A00ECE61D /* ForgotPasswordViewController.swift */,
+				D40AAD681F65AC80001A65E3 /* AddBusinessViewController.swift */,
+				D40AAD6A1F65B1B9001A65E3 /* SignUpViewController.swift */,
 				D4319A1F1F438956002E545A /* Main.storyboard */,
 				D4319A251F438956002E545A /* Assets.xcassets */,
 				D4319A271F438956002E545A /* LaunchScreen.storyboard */,
@@ -482,6 +488,8 @@
 				D4319A1C1F438956002E545A /* AppDelegate.swift in Sources */,
 				D459CB801F4482FB005CFB2F /* ChecklistViewController.swift in Sources */,
 				D4F5B8541F44C379006E8DF5 /* NewVehicleViewController.swift in Sources */,
+				D40AAD6B1F65B1B9001A65E3 /* SignUpViewController.swift in Sources */,
+				D40AAD691F65AC80001A65E3 /* AddBusinessViewController.swift in Sources */,
 				D4319A241F438956002E545A /* MechanicsAssistant.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

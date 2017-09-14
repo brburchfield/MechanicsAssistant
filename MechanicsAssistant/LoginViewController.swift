@@ -10,13 +10,20 @@ import UIKit
 import Firebase
 import SystemConfiguration
 
+var currentBusinessLocation = ""
+var currentBusinessID = ""
+
 class LoginViewController: UIViewController, UITextFieldDelegate {
     
     //outlets for UI
     @IBOutlet weak var emailField: UITextField!
     @IBOutlet weak var passwordField: UITextField!
+    @IBOutlet weak var IDField: UITextField!
+    @IBOutlet weak var locationField: UITextField!
     @IBOutlet weak var emailErrorLabel: UILabel!
     @IBOutlet weak var passwordErrorLabel: UILabel!
+    @IBOutlet weak var IDErrorLabel: UILabel!
+    @IBOutlet weak var locationErrorLabel: UILabel!
     
     //array variables to populate fetch requests
     var userNameArray: [String] = []
@@ -25,6 +32,11 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        emailField.delegate = self
+        passwordField.delegate = self
+        IDField.delegate = self
+        locationField.delegate = self
         
         // Hide the navigation bar on the this view controller
         self.navigationController?.setNavigationBarHidden(true, animated: true)
@@ -42,11 +54,28 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
     }
     
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool
+    {
+        // Try to find next responder
+        if let nextField = textField.superview?.viewWithTag(textField.tag + 1) as? UITextField {
+            nextField.becomeFirstResponder()
+        } else {
+            // Not found, so remove keyboard.
+            textField.resignFirstResponder()
+        }
+        return false
+    }
+    
+    @IBAction func addBusinessButtonPressed(_ sender: UIButton) {
+        self.performSegue(withIdentifier: "AddBusiness", sender: self)
+    }
+    
     @IBAction func loginButtonPressed(_ sender: UIButton) {
         
         //remove error labels
         emailErrorLabel.text = ""
         passwordErrorLabel.text = ""
+        IDErrorLabel.text = ""
         
         //create shake animation
         let shake = CAKeyframeAnimation( keyPath:"transform" )
@@ -62,9 +91,11 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         //assign text field entries to variables
         let enteredUN = emailField.text
         let enteredPW = passwordField.text
+        let enteredID = IDField.text
+        let enteredLocation = locationField.text
         
         //if either field is empty or the email field is an invalid email...
-        if enteredUN == "" || enteredPW == "" || !isValidEmail(testStr: enteredUN!) || (enteredPW?.characters.count)! < 7{
+        if enteredUN == "" || enteredPW == "" || enteredID == "" || enteredLocation == "" || !isValidEmail(testStr: enteredUN!) || (enteredPW?.characters.count)! < 7{
             
             //...Set text to error labels and shake text views
             if enteredUN == "" {
@@ -77,6 +108,18 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 passwordErrorLabel.text = "Please enter password"
                 passwordField.layer.add(shake, forKey:nil)
                 passwordErrorLabel.layer.add(shake, forKey:nil)
+            }
+            
+            if enteredID == "" {
+                IDErrorLabel.text = "Please enter business ID"
+                IDField.layer.add(shake, forKey:nil)
+                IDErrorLabel.layer.add(shake, forKey:nil)
+            }
+            
+            if enteredLocation == "" {
+                locationErrorLabel.text = "Please enter location"
+                locationField.layer.add(shake, forKey:nil)
+                locationErrorLabel.layer.add(shake, forKey:nil)
             }
             
             if enteredUN != "" && !isValidEmail(testStr: enteredUN!){
@@ -94,9 +137,11 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 passwordField.text = ""
             }
             
+            
+            
             return
             
-            //If both text fields have value and the email field has a valid email...
+            //If all text fields have value and the email field has a valid email...
         }else{
             
             //...and user has internet connection...
@@ -108,6 +153,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                     
                     //If login successful...
                     if error == nil {
+                        
+                        currentBusinessID = self.IDField.text!
+                        currentBusinessLocation = self.locationField.text!
+                        
+                        let defaults = UserDefaults.standard
+                        defaults.set(self.locationField.text!, forKey: "currentLocation")
+                        defaults.set(self.IDField.text!, forKey: "currentBusiness")
                         
                         //move to DataViewController
                         self.performSegue(withIdentifier: "SuccessfulLogin", sender: sender)
@@ -136,6 +188,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             
         }
         
+    }
+    
+    @IBAction func signupButtonPressed(_ sender: UIButton) {
+        self.performSegue(withIdentifier: "SignUp", sender: sender)
     }
     
     //function for displaying an alert controller

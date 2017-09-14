@@ -27,6 +27,7 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     
     //variable for a collection of data from Firebase
     var vehicles = [DataSnapshot]()
+    var tempVehicles = [DataSnapshot]()
     
     //Setup Firebase reference variables
     let ref = Database.database().reference(withPath: "vehicles")
@@ -36,6 +37,18 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        
+        if currentBusinessID == "" || currentBusinessLocation == "" {
+            let defaults = UserDefaults.standard
+            if let businessIDFromStorage = defaults.string(forKey: "currentBusiness") {
+                currentBusinessID = businessIDFromStorage
+            }
+            if let locationFromStorage = defaults.string(forKey: "currentLocation") {
+                currentBusinessLocation = locationFromStorage
+            }
+        }
+        
         
         // Hide the navigation bar on this view controller
         self.navigationController?.setNavigationBarHidden(true, animated: true)
@@ -51,18 +64,31 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     override func viewDidAppear(_ animated: Bool) {
         // Listen for vehicles added to the Firebase database
         ref.observe(.value, with: { (snapshot) -> Void in
-            
+            self.tempVehicles = []
             self.vehicles = []
             
-            //add vehicles to vehicles variable
+            //add vehicles to tempVehicles variable
             for item in snapshot.children{
-                self.vehicles.append(item as! DataSnapshot)
+                self.tempVehicles.append(item as! DataSnapshot)
             }
             
-            //After 1 second, reload table view data
-            self.delayWithSeconds(1){
+            
+            self.delayWithSeconds(1) {
+                for item in self.tempVehicles {
+                    let value = item.value as? NSDictionary
+                    let business = value?["business"] as? String ?? ""
+                    let location = value?["location"] as? String ?? ""
+                    if business == currentBusinessID && location == currentBusinessLocation {
+                        self.vehicles.append(item)
+                    }
+                }
+            }
+            
+            //After 2 seconds, reload table view data
+            self.delayWithSeconds(2) {
                 self.tableView.reloadData()
             }
+
         })
     }
     
