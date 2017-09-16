@@ -33,12 +33,13 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     let ref = Database.database().reference(withPath: "vehicles")
     
     @IBOutlet weak var tableView: UITableView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        
+        activityIndicator.isHidden = true
         if currentBusinessID == "" || currentBusinessLocation == "" {
             let defaults = UserDefaults.standard
             if let businessIDFromStorage = defaults.string(forKey: "currentBusiness") {
@@ -46,6 +47,9 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
             }
             if let locationFromStorage = defaults.string(forKey: "currentLocation") {
                 currentBusinessLocation = locationFromStorage
+            }
+            if let emailFromStorage = defaults.string(forKey: "currentEmail") {
+                currentBusinessEmail = emailFromStorage
             }
         }
         
@@ -62,10 +66,18 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     }
     
     override func viewDidAppear(_ animated: Bool) {
+        
+        
+        activityIndicator.startAnimating()
+        activityIndicator.isHidden = false
+        
         // Listen for vehicles added to the Firebase database
         ref.observe(.value, with: { (snapshot) -> Void in
+            
+            
             self.tempVehicles = []
             self.vehicles = []
+            
             
             //add vehicles to tempVehicles variable
             for item in snapshot.children{
@@ -87,8 +99,10 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
             //After 2 seconds, reload table view data
             self.delayWithSeconds(2) {
                 self.tableView.reloadData()
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
             }
-
+            
         })
     }
     
@@ -169,12 +183,15 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
         //display completion percentage
         cell.completionLabel.text = "\(completionPercent)% complete"
         
-        
         return cell
     }
     
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        
+        if editingStyle == .delete {
+            //set currentID to selected vehicle's ID
+            currentID = vehicles[indexPath.row].key
+            displayDeletionAlert()
+        }
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -209,6 +226,32 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
             completion()
         }
+    }
+    
+    //function for displaying alert and handling vehicle completion
+    func displayDeletionAlert() {
+        let alertController = UIAlertController(title: "Delete Vehicle", message: "Are you sure you'd like to delete this vehicle?", preferredStyle: .alert)
+        
+        let confirmAction = UIAlertAction(title: "Confirm", style: .default) { (_) in
+            let ref = Database.database().reference().child("vehicles").child("\(currentID)")
+            ref.removeValue()
+            self.activityIndicator.startAnimating()
+            self.activityIndicator.isHidden = false
+            
+            self.delayWithSeconds(1){
+                self.tableView.reloadData()
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        alertController.addAction(confirmAction)
+        alertController.addAction(cancelAction)
+        
+        self.present(alertController, animated: true, completion: nil)
+        
     }
     
 }

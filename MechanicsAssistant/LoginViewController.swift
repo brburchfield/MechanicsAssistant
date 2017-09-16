@@ -12,6 +12,7 @@ import SystemConfiguration
 
 var currentBusinessLocation = ""
 var currentBusinessID = ""
+var currentBusinessEmail = ""
 
 class LoginViewController: UIViewController, UITextFieldDelegate {
     
@@ -24,6 +25,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var passwordErrorLabel: UILabel!
     @IBOutlet weak var IDErrorLabel: UILabel!
     @IBOutlet weak var locationErrorLabel: UILabel!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     //array variables to populate fetch requests
     var userNameArray: [String] = []
@@ -32,11 +34,21 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
+        activityIndicator.isHidden = true
         emailField.delegate = self
         passwordField.delegate = self
         IDField.delegate = self
         locationField.delegate = self
+        
+        if currentBusinessID == "" || currentBusinessLocation == "" {
+            let defaults = UserDefaults.standard
+            if let businessIDFromStorage = defaults.string(forKey: "currentBusiness") {
+                IDField.text = businessIDFromStorage
+            }
+            if let locationFromStorage = defaults.string(forKey: "currentLocation") {
+                locationField.text = locationFromStorage
+            }
+        }
         
         // Hide the navigation bar on the this view controller
         self.navigationController?.setNavigationBarHidden(true, animated: true)
@@ -71,7 +83,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func loginButtonPressed(_ sender: UIButton) {
-        
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
         //remove error labels
         emailErrorLabel.text = ""
         passwordErrorLabel.text = ""
@@ -96,6 +109,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         //if either field is empty or the email field is an invalid email...
         if enteredUN == "" || enteredPW == "" || enteredID == "" || enteredLocation == "" || !isValidEmail(testStr: enteredUN!) || (enteredPW?.characters.count)! < 7{
+            activityIndicator.stopAnimating()
+            activityIndicator.isHidden = true
             
             //...Set text to error labels and shake text views
             if enteredUN == "" {
@@ -145,7 +160,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         }else{
             
             //...and user has internet connection...
-            if isInternetAvailable() == true {
+            if isInternetAvailable() {
                 
                 
                 //...Attempt to login with Firebase
@@ -157,23 +172,66 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                         currentBusinessID = self.IDField.text!
                         currentBusinessLocation = self.locationField.text!
                         
-                        let defaults = UserDefaults.standard
-                        defaults.set(self.locationField.text!, forKey: "currentLocation")
-                        defaults.set(self.IDField.text!, forKey: "currentBusiness")
+                        //TODO: Check to see if business exists and get business email
+                        let ref = Database.database().reference(withPath: "businesses")
                         
-                        //move to DataViewController
-                        self.performSegue(withIdentifier: "SuccessfulLogin", sender: sender)
+                        ref.observe(.value, with: { (snapshot) -> Void in
+                            
+                            var businesses = [DataSnapshot]()
+                            
+                            //add businesses to businesses variable
+                            for item in snapshot.children{
+                                businesses.append(item as! DataSnapshot)
+                            }
+                            
+                            var shouldShowBusinessError = true
+                            
+                            self.delayWithSeconds(1) {
+                                for item in businesses {
+                                    let value = item.value as? NSDictionary
+                                    let business = value?["id"] as? String ?? ""
+                                    if business == currentBusinessID {
+                                        shouldShowBusinessError = false
+                                        let defaults = UserDefaults.standard
+                                        defaults.set(self.locationField.text!, forKey: "currentLocation")
+                                        defaults.set(self.IDField.text!, forKey: "currentBusiness")
+                                        defaults.set(value?["email"] as? String ?? "", forKey: "currentEmail")
+                                        currentBusinessEmail = value?["email"] as? String ?? ""
+                                        
+                                        self.activityIndicator.stopAnimating()
+                                        self.activityIndicator.isHidden = true
+                                        //move to DataViewController
+                                        self.performSegue(withIdentifier: "SuccessfulLogin", sender: sender)
+                                        
+                                        //and clear text fields
+                                        self.emailField.text = ""
+                                        self.passwordField.text = ""
+                                    }
+                                }
+                                
+                                if shouldShowBusinessError {
+                                    self.activityIndicator.stopAnimating()
+                                    self.displayAlert("No such business/location", alertString: "There is no business with that value in the database.")
+                                    do {
+                                        try Auth.auth().signOut()
+                                    } catch let signOutError as NSError {
+                                        print ("Error signing out: %@", signOutError)
+                                    }
+                                }
+                                
+                            }
+                            
+                        })
                         
-                        //and clear text fields
-                        self.emailField.text = ""
-                        self.passwordField.text = ""
                         
                         //If login not successful...
                     } else {
-                        
+                        self.activityIndicator.stopAnimating()
+                        self.activityIndicator.isHidden = true
                         //...show login errors from Firebase
                         self.displayAlert("Login Error", alertString: (error?.localizedDescription)!)
                         self.passwordField.text = ""
+                        
                         
                     }
                     
@@ -181,9 +239,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 
                 //If there's no internet connection...
             }else{
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
                 //...show error
                 displayAlert("No Connection", alertString: "You must be connected to the internet in order to login")
                 passwordField.text = ""
+                
             }
             
         }
@@ -192,6 +253,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @IBAction func signupButtonPressed(_ sender: UIButton) {
         self.performSegue(withIdentifier: "SignUp", sender: sender)
+    }
+    
+    @IBAction func editEmailButtonPressed(_ sender: UIButton) {
+        self.performSegue(withIdentifier: "EditEmail", sender: sender)
     }
     
     //function for displaying an alert controller
@@ -230,6 +295,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0
         let needsConnection = (flags.rawValue & UInt32(kSCNetworkFlagsConnectionRequired)) != 0
         return (isReachable && !needsConnection)
+    }
+    
+    func delayWithSeconds(_ seconds: Double, completion: @escaping () -> ()) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            completion()
+        }
     }
     
 }

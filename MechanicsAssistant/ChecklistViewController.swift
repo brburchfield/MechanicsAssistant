@@ -18,6 +18,7 @@ open class CustomChecklistCell:  UITableViewCell {
 
 class ChecklistViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, MFMailComposeViewControllerDelegate {
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var tableView: UITableView!
     
     //set empty variables
@@ -28,6 +29,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
     var userVin = ""
     var userYear = ""
     var userMileage = ""
+    var userEmail = ""
     var mainService = ""
     var airFilterStatus = ""
     var batteryCablesStatus = ""
@@ -87,6 +89,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
             self.userYear = value?["year"] as? String ?? ""
             self.userVin = value?["vin"] as? String ?? ""
             self.userMileage = value?["mileage"] as? String ?? ""
+            self.userEmail = value?["email"] as? String ?? ""
         })
         
         //set statuses from Firebase
@@ -170,8 +173,10 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                     let value = snapshot.value as? NSDictionary
                     self.titles.append("\(value?["serviceNumber4"] as? String ?? "")")
                 }
-                
+                self.activityIndicator.isHidden = true
+                self.activityIndicator.stopAnimating()
             })
+            
         }
         
         //When user removes a vehicle item, pop navigation
@@ -180,6 +185,11 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
             self.navigationController?.popViewController(animated: true)
         })
         
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -268,6 +278,10 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         return true
     }
     
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        return true
+    }
+    
     @IBAction func backButtonPressed(_ sender: UIButton) {
         navigationController?.popViewController(animated: true)
     }
@@ -305,7 +319,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         let composeVC = MFMailComposeViewController()
         composeVC.mailComposeDelegate = self
         // Configure the fields of the interface.
-        composeVC.setToRecipients(["mechanicsassistant@aol.com"])
+        composeVC.setToRecipients([currentBusinessEmail, userEmail])
         composeVC.setSubject(subjectString)
         composeVC.setMessageBody(messageBody, isHTML: false)
         // Present the view controller modally.

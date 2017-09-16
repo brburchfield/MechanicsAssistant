@@ -26,6 +26,7 @@
 		D4B8E7741F43A03C009647BF /* VehicleListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4B8E7731F43A03C009647BF /* VehicleListViewController.swift */; };
 		D4B8E7781F43CFB1009647BF /* CustomVehicleCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = D4B8E7771F43CFB1009647BF /* CustomVehicleCell.xib */; };
 		D4C0DD971F4E257A00ECE61D /* ForgotPasswordViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4C0DD961F4E257A00ECE61D /* ForgotPasswordViewController.swift */; };
+		D4C8F6791F6D7E06002E64ED /* EditEmailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4C8F6781F6D7E06002E64ED /* EditEmailViewController.swift */; };
 		D4F5B8541F44C379006E8DF5 /* NewVehicleViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F5B8531F44C379006E8DF5 /* NewVehicleViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -78,6 +79,7 @@
 		D4B8E7731F43A03C009647BF /* VehicleListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VehicleListViewController.swift; sourceTree = "<group>"; };
 		D4B8E7771F43CFB1009647BF /* CustomVehicleCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CustomVehicleCell.xib; sourceTree = "<group>"; };
 		D4C0DD961F4E257A00ECE61D /* ForgotPasswordViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ForgotPasswordViewController.swift; sourceTree = "<group>"; };
+		D4C8F6781F6D7E06002E64ED /* EditEmailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EditEmailViewController.swift; sourceTree = "<group>"; };
 		D4F5B8531F44C379006E8DF5 /* NewVehicleViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NewVehicleViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -165,6 +167,7 @@
 				D4C0DD961F4E257A00ECE61D /* ForgotPasswordViewController.swift */,
 				D40AAD681F65AC80001A65E3 /* AddBusinessViewController.swift */,
 				D40AAD6A1F65B1B9001A65E3 /* SignUpViewController.swift */,
+				D4C8F6781F6D7E06002E64ED /* EditEmailViewController.swift */,
 				D4319A1F1F438956002E545A /* Main.storyboard */,
 				D4319A251F438956002E545A /* Assets.xcassets */,
 				D4319A271F438956002E545A /* LaunchScreen.storyboard */,
@@ -491,6 +494,7 @@
 				D40AAD6B1F65B1B9001A65E3 /* SignUpViewController.swift in Sources */,
 				D40AAD691F65AC80001A65E3 /* AddBusinessViewController.swift in Sources */,
 				D4319A241F438956002E545A /* MechanicsAssistant.xcdatamodeld in Sources */,
+				D4C8F6791F6D7E06002E64ED /* EditEmailViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

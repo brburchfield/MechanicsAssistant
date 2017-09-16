@@ -38,6 +38,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var vinTextField:       UITextField!
     @IBOutlet weak var servicesTextField:  UITextField!
     @IBOutlet weak var mileageTextField: UITextField!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,6 +46,8 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         
         // Hide the navigation bar on the this view controller
         self.navigationController?.setNavigationBarHidden(true, animated: true)
+        
+        activityIndicator.isHidden = true
         
         displayLookupAlert()
         
@@ -147,7 +150,8 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     
                     //Then, check if all fields contain correct input
                     if (firstNameTextField.text?.characters.count)! > 30 || (lastNameTextField.text?.characters.count)! > 30 || (makeTextField.text?.characters.count)! > 23 || (modelTextField.text?.characters.count)! > 20 ||
-                        (yearTextField.text?.characters.count)! != 4 || (colorTextField.text?.characters.count)! > 20 || (aptTextField.text?.characters.count)! > 20 || (cityTextField.text?.characters.count)! > 30 || (stateTextField.text?.characters.count)! > 2 || (addressTextField.text?.characters.count)! > 40 || (zipTextField.text?.characters.count)! != 5 || (phoneTextField.text?.characters.count)! != 10 || isValidEmail(testStr: emailTextField.text!) || (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 || (mileageTextField.text?.characters.count)! > 7 {
+                        (yearTextField.text?.characters.count)! != 4 || (colorTextField.text?.characters.count)! > 20 || (aptTextField.text?.characters.count)! > 20 || (cityTextField.text?.characters.count)! > 30 || (stateTextField.text?.characters.count)! > 2 || (addressTextField.text?.characters.count)! > 40 || (zipTextField.text?.characters.count)! != 5 || (phoneTextField.text?.characters.count)! != 10 || !isValidEmail(testStr: emailTextField.text!) || (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 || (mileageTextField.text?.characters.count)! > 7 {
+                        print("Got this far")
                         
                         if (firstNameTextField.text?.characters.count)! > 30 {
                             showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Must be less than 30 characters")
@@ -421,6 +425,8 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
             
             if alertFieldText != "" {
                 
+                self.activityIndicator.isHidden = false
+                self.activityIndicator.startAnimating()
                 
                 //Check Firebase for customer
                 let ref = Database.database().reference().child("customers").child(alertFieldText!)
@@ -463,7 +469,8 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                         self.emailTextField.text = value?["email"] as? String ?? ""
                         self.emailTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
-                        
+                        self.activityIndicator.isHidden = true
+                        self.activityIndicator.stopAnimating()
                         
                     } else {
                         self.displayNoCustomerAlert("No Result", alertString: "No such customer has been found. Please try again or create a new customer.")
