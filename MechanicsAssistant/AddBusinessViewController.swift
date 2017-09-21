@@ -13,6 +13,8 @@ import MessageUI
 
 class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UIPickerViewDataSource, UIPickerViewDelegate, MFMailComposeViewControllerDelegate {
     
+    @IBOutlet weak var ownerEmailField: UITextField!
+    @IBOutlet weak var ownerPasswordField: UITextField!
     @IBOutlet weak var businessNameField: UITextField!
     @IBOutlet weak var businessEmailField: UITextField!
     @IBOutlet weak var businessIDField: UITextField!
@@ -58,7 +60,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-         if row == 0 {
+        if row == 0 {
             backgroundImage.image = UIImage(named: "BackgroundBlue")
             currentPickerValue = row
         }
@@ -104,58 +106,138 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
     
     @IBAction func submitButtonPressed(_ sender: UIButton) {
         
-        if businessNameField.text! == "" || businessEmailField.text == "" || businessIDField.text == "" || logoView.image == nil || !isInternetAvailable() || !isValidEmail(testStr: businessEmailField.text!) {
+        
+        if !isValidEmail(testStr: ownerEmailField.text!) || ownerEmailField.text == "" {
             
-            if businessNameField.text == "" {
-                showTextFieldPlaceholder(textfield: businessNameField, placeholderString: "Add business name")
+            if !isValidEmail(testStr: ownerEmailField.text!) {
+                showTextFieldPlaceholder(textfield: ownerEmailField, placeholderString: "Not a valid email")
             }
             
-            if businessEmailField.text == "" {
-               showTextFieldPlaceholder(textfield: businessEmailField, placeholderString: "Add business email")
+            if ownerEmailField.text == "" {
+                showTextFieldPlaceholder(textfield: ownerPasswordField, placeholderString: "Add owner password")
             }
-            
-            if businessIDField.text == "" {
-                showTextFieldPlaceholder(textfield: businessIDField, placeholderString: "Add custom business ID")
-            }
-            
-            if logoView.image == nil {
-                displayAlert("No Logo Added", alertString: "You must add a logo to add a new business.")
-            }
-            
-            if !isValidEmail(testStr: businessEmailField.text!){
-                showTextFieldPlaceholder(textfield: businessEmailField, placeholderString: "Not a valid email")
-            }
-            
-            if !isInternetAvailable() {
-                displayAlert("No Connection", alertString: "You must be connected to the internet to add a business.")
-            }
-            
-            
             
         } else {
-
-            //Encode input image
-            let imagePNG = UIImagePNGRepresentation(logoView.image!)
-            let encoded64image = imagePNG?.base64EncodedString(options: .lineLength64Characters)
-            
-            
-            //Save information to Firebase
-            let businessRef = Database.database().reference(withPath: "businesses").childByAutoId()
-            businessRef.child("name").setValue(businessNameField.text)
-            businessRef.child("email").setValue(businessEmailField.text)
-            businessRef.child("id").setValue(businessIDField.text)
-            businessRef.child("color").setValue("\(currentPickerValue)")
-            businessRef.child("logo").setValue(encoded64image)
-            
-            if !MFMailComposeViewController.canSendMail() {
-                self.displayAlert("Can't Email", alertString: "Mail services are not available")
-                return
-            } else {
-               
-                sendEmail(subjectString: "Your business ID", messageBody: "Thank you for using Mechanic's Assistant!\n\nYour business ID is:\n\n\(self.businessIDField.text!)\n\nPlease keep this on file. This will be your key to sign in to the employee and lobby applications. If you have any issues or questions, please email us at info@mechanicsassistant.com.")
-               
+            //...Attempt to login with Firebase
+            Auth.auth().signIn(withEmail: ownerEmailField.text!, password: ownerPasswordField.text!) { (user, error) in
+                
+                let businessRef = Database.database().reference(withPath: "businesses")
+                businessRef.observe(.value,  with: { (snapshot) -> Void in
+                    
+                    var businesses = [DataSnapshot]()
+                    
+                    //add businesses to businesses variable
+                    for item in snapshot.children{
+                        businesses.append(item as! DataSnapshot)
+                    }
+                    
+                    var shouldShowBusinessError = false
+                    
+                    self.delayWithSeconds(1){
+                        for item in businesses {
+                            let value = item.value as? NSDictionary
+                            let ownerEmail = value?["ownerEmail"] as? String ?? ""
+                            if ownerEmail == self.ownerEmailField.text {
+                                shouldShowBusinessError = true
+                            }
+                        }
+                        
+                        if shouldShowBusinessError {
+                            //Go ahead and sign out (this was just to check existence of user profile)
+                            do {
+                                try Auth.auth().signOut()
+                            } catch let signOutError as NSError {
+                                print ("Error signing out: %@", signOutError)
+                            }
+                            self.displayAlert("Duplicate Owner", alertString: "An owner account may only have one business with which it's associated.\n\nTo create a second business account, please use an alternate email.")
+                            return
+                        } else {
+                            //If login successful...
+                            //Go ahead and sign out (this was just to check existence of user profile)
+                            if error == nil {
+                                do {
+                                    try Auth.auth().signOut()
+                                } catch let signOutError as NSError {
+                                    print ("Error signing out: %@", signOutError)
+                                }
+                                
+                                if self.businessNameField.text! == "" || self.businessEmailField.text == "" || self.businessIDField.text == "" || self.logoView.image == nil || !self.isInternetAvailable() || !self.isValidEmail(testStr: self.businessEmailField.text!) {
+                                    
+                                    
+                                    if self.businessNameField.text == "" {
+                                        self.showTextFieldPlaceholder(textfield: self.businessNameField, placeholderString: "Add business name")
+                                    }
+                                    
+                                    if self.businessEmailField.text == "" {
+                                        self.showTextFieldPlaceholder(textfield: self.businessEmailField, placeholderString: "Add business email")
+                                    }
+                                    
+                                    if self.businessIDField.text == "" {
+                                        self.showTextFieldPlaceholder(textfield: self.businessIDField, placeholderString: "Add custom business ID")
+                                    }
+                                    
+                                    if self.logoView.image == nil {
+                                        self.displayAlert("No Logo Added", alertString: "You must add a logo to add a new business.")
+                                    }
+                                    
+                                    if !self.isValidEmail(testStr: self.businessEmailField.text!){
+                                        self.showTextFieldPlaceholder(textfield: self.businessEmailField, placeholderString: "Not a valid email")
+                                    }
+                                    
+                                    if !self.isInternetAvailable() {
+                                        self.displayAlert("No Connection", alertString: "You must be connected to the internet to add a business.")
+                                    }
+                                    
+                                    
+                                    
+                                } else {
+                                    
+                                    //Encode input image
+                                    let imagePNG = UIImagePNGRepresentation(self.logoView.image!)
+                                    let encoded64image = imagePNG?.base64EncodedString(options: .lineLength64Characters)
+                                    let stringSize = encoded64image?.utf8.count
+                                    if stringSize! < 10485760 {
+                                        
+                                        
+                                        //Save information to Firebase
+                                        let businessRef = Database.database().reference(withPath: "businesses").childByAutoId()
+                                        businessRef.child("ownerEmail").setValue(self.ownerEmailField.text)
+                                        businessRef.child("name").setValue(self.businessNameField.text)
+                                        businessRef.child("email").setValue(self.businessEmailField.text)
+                                        businessRef.child("id").setValue(self.businessIDField.text)
+                                        businessRef.child("color").setValue("\(self.currentPickerValue)")
+                                        businessRef.child("logo").setValue(encoded64image)
+                                        
+                                        if !MFMailComposeViewController.canSendMail() {
+                                            self.displayAlert("Can't Email", alertString: "Mail services are not available, but your business has been added. Your business ID is:\n\n\(self.businessIDField.text!)")
+                                            return
+                                        } else {
+                                            
+                                            self.sendEmail(subjectString: "Your business ID", messageBody: "Thank you for using Mechanic's Assistant!\n\nYour business ID is:\n\n\(self.businessIDField.text!)\n\nPlease keep this on file. This will be your key to sign in to the employee and lobby applications. If you have any issues or questions, please email us at info@mechanicsassistant.com.")
+                                            
+                                        }
+                                        
+                                    } else {
+                                        self.logoView.image = nil
+                                        //Show image too large alert
+                                        self.displayAlert("Invalid Logo", alertString: "The logo file you've provided is too large. Please add a smaller image and try again.")
+                                    }
+                                }
+                                
+                                
+                                //If login unsuccessful...
+                            } else {
+                                //...show login errors from Firebase
+                                self.displayAlert("Login Error", alertString: (error?.localizedDescription)!)
+                                self.ownerPasswordField.text = ""
+                            }
+                        }
+                        
+                    }
+                    
+                })
+                
             }
-            
         }
         
     }
@@ -231,7 +313,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
         let composeVC = MFMailComposeViewController()
         composeVC.mailComposeDelegate = self
         // Configure the fields of the interface.
-        composeVC.setToRecipients([self.businessEmailField.text!])
+        composeVC.setToRecipients([self.ownerEmailField.text!])
         composeVC.setSubject(subjectString)
         composeVC.setMessageBody(messageBody, isHTML: false)
         // Present the view controller modally.
@@ -255,6 +337,12 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
         })
         
         
+    }
+    
+    func delayWithSeconds(_ seconds: Double, completion: @escaping () -> ()) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            completion()
+        }
     }
     
 }

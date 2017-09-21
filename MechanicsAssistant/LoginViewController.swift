@@ -62,8 +62,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        let ref = Database.database().reference(withPath: "businesses")
+        ref.removeAllObservers()
         super.viewWillDisappear(animated)
-        
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool
@@ -211,6 +212,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 
                                 if shouldShowBusinessError {
                                     self.activityIndicator.stopAnimating()
+                                    self.activityIndicator.isHidden = true
                                     self.displayAlert("No such business/location", alertString: "There is no business with that value in the database.")
                                     do {
                                         try Auth.auth().signOut()
@@ -255,8 +257,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         self.performSegue(withIdentifier: "SignUp", sender: sender)
     }
     
-    @IBAction func editEmailButtonPressed(_ sender: UIButton) {
-        self.performSegue(withIdentifier: "EditEmail", sender: sender)
+    @IBAction func editBusinessButtonPressed(_ sender: UIButton) {
+        self.performSegue(withIdentifier: "EditBusiness", sender: sender)
     }
     
     //function for displaying an alert controller

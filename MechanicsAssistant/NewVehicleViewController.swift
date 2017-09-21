@@ -71,6 +71,10 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        let vehicleRef = Database.database().reference(withPath: "vehicles")
+        let customerRef = Database.database().reference(withPath: "customers")
+        vehicleRef.removeAllObservers()
+        customerRef.removeAllObservers()
         super.viewWillDisappear(animated)
     }
     
@@ -120,7 +124,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
             var itemNumber = 0
             for item in serviceArray! {
                 if item == "Check Air Filter" || item == "Check Battery Cables" || item == "Check Battery Fluid" || item == "Check Belts" || item == "Check Brake Fluid Level" || item == "Check Coolant" || item == "Check Horn" || item == "Check Hoses" || item == "Check Lights" || item == "Check Oil Level" || item == "Check Power Steering Fluid" || item == "Check Tire Pressure" || item == "Check Transmission Fluid Level" || item == "Check Tire Tread Depth" || item == "Check Windshield Washer Fluid" {
-                     serviceArray?.remove(at: itemNumber)
+                    serviceArray?.remove(at: itemNumber)
                 }
                 if item.characters.count == 0 || item == "" {
                     serviceArray?.remove(at: itemNumber)
@@ -151,7 +155,6 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     //Then, check if all fields contain correct input
                     if (firstNameTextField.text?.characters.count)! > 30 || (lastNameTextField.text?.characters.count)! > 30 || (makeTextField.text?.characters.count)! > 23 || (modelTextField.text?.characters.count)! > 20 ||
                         (yearTextField.text?.characters.count)! != 4 || (colorTextField.text?.characters.count)! > 20 || (aptTextField.text?.characters.count)! > 20 || (cityTextField.text?.characters.count)! > 30 || (stateTextField.text?.characters.count)! > 2 || (addressTextField.text?.characters.count)! > 40 || (zipTextField.text?.characters.count)! != 5 || (phoneTextField.text?.characters.count)! != 10 || !isValidEmail(testStr: emailTextField.text!) || (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 || (mileageTextField.text?.characters.count)! > 7 {
-                        print("Got this far")
                         
                         if (firstNameTextField.text?.characters.count)! > 30 {
                             showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Must be less than 30 characters")
@@ -436,38 +439,24 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     
                     //If there's been a match...
                     if value != nil {
-                        // Populate text fields and disable interaction to pre-populated fields
+                        // Populate text fields
                         self.phoneTextField.text = alertFieldText
-                        self.phoneTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.firstNameTextField.text = value?["firstName"] as? String ?? ""
-                        self.firstNameTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.lastNameTextField.text = value?["lastName"] as? String ?? ""
-                        self.lastNameTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.addressTextField.text = value?["streetAddress"] as? String ?? ""
-                        self.addressTextField.isUserInteractionEnabled = false
-                        self.addressTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.aptTextField.text = value?["apt"] as? String ?? ""
-                        self.aptTextField.isUserInteractionEnabled = false
-                        self.aptTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.cityTextField.text = value?["city"] as? String ?? ""
-                        self.cityTextField.isUserInteractionEnabled = false
-                        self.cityTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.stateTextField.text = value?["state"] as? String ?? ""
-                        self.stateTextField.isUserInteractionEnabled = false
-                        self.stateTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.zipTextField.text = value?["zip"] as? String ?? ""
-                        self.zipTextField.isUserInteractionEnabled = false
-                        self.zipTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.emailTextField.text = value?["email"] as? String ?? ""
-                        self.emailTextField.backgroundColor = UIColor(red:0.6, green:0.6, blue:0.6, alpha:1.0)
                         
                         self.activityIndicator.isHidden = true
                         self.activityIndicator.stopAnimating()
@@ -484,14 +473,19 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
             }
         }
         
-        let cancelAction = UIAlertAction(title: "Add/Edit Customer", style: .cancel) { (_) in }
+        let editAction = UIAlertAction(title: "Add/Edit Customer", style: .default) { (_) in }
         
         alertController.addTextField { (textField) in
             textField.placeholder = "Primary Phone Number"
             textField.keyboardType = UIKeyboardType.numberPad
         }
         
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in
+            self.navigationController?.popViewController(animated: true)
+        }
+        
         alertController.addAction(confirmAction)
+        alertController.addAction(editAction)
         alertController.addAction(cancelAction)
         
         self.present(alertController, animated: true, completion: nil)

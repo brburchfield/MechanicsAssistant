@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import MessageUI
+import SystemConfiguration
 
 open class CustomChecklistCell:  UITableViewCell {
     
@@ -22,37 +23,18 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
     @IBOutlet weak var tableView: UITableView!
     
     //set empty variables
-    var userFirstName = ""
-    var userLastName = ""
-    var userMake = ""
-    var userModel = ""
-    var userVin = ""
-    var userYear = ""
-    var userMileage = ""
-    var userEmail = ""
-    var mainService = ""
-    var airFilterStatus = ""
-    var batteryCablesStatus = ""
-    var batteryFluidStatus = ""
-    var beltsStatus = ""
-    var brakeLevelStatus = ""
-    var coolantLevelStatus = ""
-    var hornStatus = ""
-    var hosesStatus = ""
-    var lightsStatus = ""
-    var mainServicesStatus = ""
-    var oilLevelStatus = ""
-    var steerLevelStatus = ""
-    var tirePressureStatus = ""
-    var transLevelStatus = ""
-    var treadDepthStatus = ""
-    var washerLevelStatus = ""
+    var userFirstName = "", userLastName = "", userMake = "", userModel = "", userVin = "", userYear = "", userMileage = "", userEmail = "", mainService = "", airFilterStatus = "", batteryCablesStatus = "", batteryFluidStatus = "", beltsStatus = "", brakeLevelStatus = "", coolantLevelStatus = "", hornStatus = "", hosesStatus = "", lightsStatus = "", mainServicesStatus = "", oilLevelStatus = "", steerLevelStatus = "", tirePressureStatus = "", transLevelStatus = "", treadDepthStatus = "", washerLevelStatus = ""
     
     var mainService0exists = false
     var mainService1exists = false
     var mainService2exists = false
     var mainService3exists = false
     var mainService4exists = false
+    var serviceNumber0 = ""
+    var serviceNumber1 = ""
+    var serviceNumber2 = ""
+    var serviceNumber3 = ""
+    var serviceNumber4 = ""
     
     //array of item titles for cell labels
     var titles = ["Check Air Filter", "Check Battery Cables", "Check Battery Fluid", "Check Belts", "Check Brake Fluid Level", "Check Coolant", "Check Horn", "Check Hoses", "Check Lights", "Check Oil Level", "Check Power Steering Fluid", "Check Tire Pressure", "Check Transmission Fluid Level", "Check Tire Tread Depth", "Check Windshield Washer Fluid"]
@@ -155,23 +137,28 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                 
                 if self.mainService0exists == true {
                     let value = snapshot.value as? NSDictionary
-                    self.titles.append("\(value?["serviceNumber0"] as? String ?? "")")
+                    self.serviceNumber0 = value?["serviceNumber0"] as? String ?? ""
+                    self.titles.append(self.serviceNumber0)
                 }
                 if self.mainService1exists == true {
                     let value = snapshot.value as? NSDictionary
-                    self.titles.append("\(value?["serviceNumber1"] as? String ?? "")")
+                    self.serviceNumber1 = value?["serviceNumber1"] as? String ?? ""
+                    self.titles.append(self.serviceNumber1)
                 }
                 if self.mainService2exists == true {
                     let value = snapshot.value as? NSDictionary
-                    self.titles.append("\(value?["serviceNumber2"] as? String ?? "")")
+                    self.serviceNumber2 = value?["serviceNumber2"] as? String ?? ""
+                    self.titles.append(self.serviceNumber2)
                 }
                 if self.mainService3exists == true {
                     let value = snapshot.value as? NSDictionary
-                    self.titles.append("\(value?["serviceNumber3"] as? String ?? "")")
+                    self.serviceNumber3 = value?["serviceNumber3"] as? String ?? ""
+                    self.titles.append(self.serviceNumber3)
                 }
                 if self.mainService4exists == true {
                     let value = snapshot.value as? NSDictionary
-                    self.titles.append("\(value?["serviceNumber4"] as? String ?? "")")
+                    self.serviceNumber4 = value?["serviceNumber4"] as? String ?? ""
+                    self.titles.append(self.serviceNumber4)
                 }
                 self.activityIndicator.isHidden = true
                 self.activityIndicator.stopAnimating()
@@ -194,7 +181,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        let ref = Database.database().reference().child("vehicles").child("\(currentID)")
+        let ref = Database.database().reference().child("vehicles")
         ref.removeAllObservers()
     }
     
@@ -292,7 +279,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         //if any items are incomplete, show alert
         for value in statuses {
             if value == "no"{
-                displayAlert("Not Complete", alertString: "You must complete each checklist item before completing a vehicle.")
+                self.displayAlert("Not Complete", alertString: "You must complete each checklist item before completing a vehicle.")
                 return
             }else {
                 numberCompleted += 1
@@ -306,12 +293,140 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         
     }
     
-    //function for displaying an alert controller
+    @IBAction func editButtonPressed(_ sender: UIButton) {
+        
+        self.displayEditServicesAlert()
+        
+    }
+    
     func displayAlert(_ alertTitle: String, alertString: String){
         let alertController = UIAlertController(title: alertTitle, message: alertString, preferredStyle: UIAlertControllerStyle.alert)
         let okButton = UIAlertAction(title:"Ok", style: UIAlertActionStyle.default, handler: nil)
         alertController.addAction(okButton)
         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    func displayNoDataAlert(_ alertTitle: String, alertString: String){
+        let alertController = UIAlertController(title: alertTitle, message: alertString, preferredStyle: UIAlertControllerStyle.alert)
+        
+        let okButton = UIAlertAction(title: "OK", style: .default) { (_) in
+            
+            self.displayEditServicesAlert()
+            
+        }
+        
+        alertController.addAction(okButton)
+        self.present(alertController, animated: true, completion: nil)
+    }
+    
+    func displayEditServicesAlert(){
+        var servicesString = ""
+        
+        if serviceNumber0 != "" {
+            servicesString.append(serviceNumber0)
+        }
+        
+        if serviceNumber1 != "" {
+            servicesString.append(", " + serviceNumber1)
+        }
+        
+        if serviceNumber2 != "" {
+            servicesString.append(", " + serviceNumber2)
+        }
+        
+        if serviceNumber3 != "" {
+            servicesString.append(", " + serviceNumber3)
+        }
+        
+        if serviceNumber4 != "" {
+            servicesString.append(", " + serviceNumber4)
+        }
+        
+        let editServicesAlertController = UIAlertController(title: "Edit Main Services", message: "Input new service information", preferredStyle: .alert)
+        
+        editServicesAlertController.addTextField{ (textField) in
+            textField.placeholder = "Main Services"
+            textField.text = servicesString
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        
+        let confirmAction = UIAlertAction(title: "Change Services", style: .default) { (_) in
+            let alertFieldText = editServicesAlertController.textFields?[0].text
+            
+            if alertFieldText != "" {
+                
+                //Create service array from service text field by separating items by commas
+                var serviceArray = alertFieldText?.components(separatedBy: ", ")
+                
+                //Remove any empty items or items that would duplicate existing services from serviceArray
+                var itemNumber = 0
+                for item in serviceArray! {
+                    if item == "Check Air Filter" || item == "Check Battery Cables" || item == "Check Battery Fluid" || item == "Check Belts" || item == "Check Brake Fluid Level" || item == "Check Coolant" || item == "Check Horn" || item == "Check Hoses" || item == "Check Lights" || item == "Check Oil Level" || item == "Check Power Steering Fluid" || item == "Check Tire Pressure" || item == "Check Transmission Fluid Level" || item == "Check Tire Tread Depth" || item == "Check Windshield Washer Fluid" {
+                        serviceArray?.remove(at: itemNumber)
+                    }
+                    if item.characters.count == 0 || item == "" {
+                        serviceArray?.remove(at: itemNumber)
+                    }else{
+                        itemNumber += 1
+                    }
+                }
+                
+                //if entered services are equal to or less than 5 and greater than 0...
+                if (serviceArray?.count)! <= 5 && (serviceArray?.count)! > 0 {
+                    
+                    //...and device is connected to the internet,
+                    if self.isInternetAvailable() == true {
+                        
+                        //TODO: Now edit services in Firebase
+                        
+                        let statusesRef = Database.database().reference().child("vehicles").child("\(currentID)").child("statuses")
+                        
+                        if serviceArray!.count < 5 {
+                            statusesRef.child("mainService4").removeValue()
+                            if serviceArray!.count < 4 {
+                                statusesRef.child("mainService3").removeValue()
+                                if serviceArray!.count < 3 {
+                                    statusesRef.child("mainService2").removeValue()
+                                    if serviceArray!.count < 2 {
+                                        statusesRef.child("mainService1").removeValue()
+                                    }
+                                }
+                            }
+                        }
+                        
+                         Database.database().reference().child("vehicles").child("\(currentID)").child("services").removeValue()
+                        
+                        var childNumber = 0
+                        
+                        for item in serviceArray!{
+                            let thisRef = Database.database().reference().child("vehicles").child("\(currentID)").child("services").child("serviceNumber\(childNumber)")
+                            thisRef.setValue(item)
+                            statusesRef.child("mainService\(childNumber)").setValue("no")
+                            childNumber += 1
+                        }
+                        
+                        self.tableView.reloadData()
+                        
+                        
+                    } else {
+                        self.displayAlert("No Connection", alertString: "You must have internet connection to edit services.")
+                    }
+                } else {
+                    self.displayNoDataAlert("Invalid Services", alertString: "You must have no more than five and no less than one service(s).")
+                }
+                
+            } else {
+                self.displayNoDataAlert("No Services Entered", alertString: "You must enter services before completing this action.")
+            }
+            
+        }
+        
+        
+        editServicesAlertController.addAction(confirmAction)
+        editServicesAlertController.addAction(cancelAction)
+        
+        self.present(editServicesAlertController, animated: true, completion: nil)
     }
     
     //function for sending email
@@ -393,6 +508,28 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
             completion()
         }
+    }
+    
+    //Function to check connection availability
+    func isInternetAvailable() -> Bool
+    {
+        var zeroAddress = sockaddr_in()
+        zeroAddress.sin_len = UInt8(MemoryLayout.size(ofValue: zeroAddress))
+        zeroAddress.sin_family = sa_family_t(AF_INET)
+        
+        let defaultRouteReachability = withUnsafePointer(to: &zeroAddress) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {zeroSockAddress in
+                SCNetworkReachabilityCreateWithAddress(nil, zeroSockAddress)
+            }
+        }
+        
+        var flags = SCNetworkReachabilityFlags()
+        if !SCNetworkReachabilityGetFlags(defaultRouteReachability!, &flags) {
+            return false
+        }
+        let isReachable = (flags.rawValue & UInt32(kSCNetworkFlagsReachable)) != 0
+        let needsConnection = (flags.rawValue & UInt32(kSCNetworkFlagsConnectionRequired)) != 0
+        return (isReachable && !needsConnection)
     }
     
 }

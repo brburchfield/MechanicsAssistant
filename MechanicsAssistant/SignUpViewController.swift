@@ -73,7 +73,12 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
                                 print("You have successfully signed up")
                                 
                                 //pop back to login view controller
-                                _ = self.navigationController?.popViewController(animated: true)
+                                do {
+                                    try Auth.auth().signOut()
+                                } catch let signOutError as NSError {
+                                    print ("Error signing out: %@", signOutError)
+                                }
+                                self.navigationController?.popViewController(animated: true)
                                 
                                 //If account creation not successful
                             } else {
