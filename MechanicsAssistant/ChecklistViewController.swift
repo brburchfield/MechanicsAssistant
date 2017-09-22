@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import MessageUI
 import SystemConfiguration
+import AEXML
 
 open class CustomChecklistCell:  UITableViewCell {
     
@@ -35,6 +36,7 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
     var serviceNumber2 = ""
     var serviceNumber3 = ""
     var serviceNumber4 = ""
+    var emailsComplete = false
     
     //array of item titles for cell labels
     var titles = ["Check Air Filter", "Check Battery Cables", "Check Battery Fluid", "Check Belts", "Check Brake Fluid Level", "Check Coolant", "Check Horn", "Check Hoses", "Check Lights", "Check Oil Level", "Check Power Steering Fluid", "Check Tire Pressure", "Check Transmission Fluid Level", "Check Tire Tread Depth", "Check Windshield Washer Fluid"]
@@ -138,26 +140,31 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                 if self.mainService0exists == true {
                     let value = snapshot.value as? NSDictionary
                     self.serviceNumber0 = value?["serviceNumber0"] as? String ?? ""
+                    self.mainService.append(self.serviceNumber0)
                     self.titles.append(self.serviceNumber0)
                 }
                 if self.mainService1exists == true {
                     let value = snapshot.value as? NSDictionary
                     self.serviceNumber1 = value?["serviceNumber1"] as? String ?? ""
+                    self.mainService.append(", " + self.serviceNumber1)
                     self.titles.append(self.serviceNumber1)
                 }
                 if self.mainService2exists == true {
                     let value = snapshot.value as? NSDictionary
                     self.serviceNumber2 = value?["serviceNumber2"] as? String ?? ""
+                    self.mainService.append(", " + self.serviceNumber2)
                     self.titles.append(self.serviceNumber2)
                 }
                 if self.mainService3exists == true {
                     let value = snapshot.value as? NSDictionary
                     self.serviceNumber3 = value?["serviceNumber3"] as? String ?? ""
+                    self.mainService.append(", " + self.serviceNumber3)
                     self.titles.append(self.serviceNumber3)
                 }
                 if self.mainService4exists == true {
                     let value = snapshot.value as? NSDictionary
                     self.serviceNumber4 = value?["serviceNumber4"] as? String ?? ""
+                    self.mainService.append(", " + self.serviceNumber4)
                     self.titles.append(self.serviceNumber4)
                 }
                 self.activityIndicator.isHidden = true
@@ -233,13 +240,11 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         if statuses[indexPath.row] == "no"{
             
             statuses[indexPath.row] = "yes"
-            print(statusNames[indexPath.row])
             ref.child("statuses").updateChildValues([statusNames[indexPath.row]: "yes"])
             
         } else if statuses[indexPath.row] == "yes"{
             
             statuses[indexPath.row] = "no"
-            print(statusNames[indexPath.row])
             ref.child("statuses").updateChildValues([statusNames[indexPath.row]: "no"])
             
         }
@@ -395,10 +400,12 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                             }
                         }
                         
-                         Database.database().reference().child("vehicles").child("\(currentID)").child("services").removeValue()
+                        // Remove all services
+                        Database.database().reference().child("vehicles").child("\(currentID)").child("services").removeValue()
                         
                         var childNumber = 0
                         
+                        // Replace all services
                         for item in serviceArray!{
                             let thisRef = Database.database().reference().child("vehicles").child("\(currentID)").child("services").child("serviceNumber\(childNumber)")
                             thisRef.setValue(item)
@@ -406,8 +413,8 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                             childNumber += 1
                         }
                         
-                        self.tableView.reloadData()
-                        
+                        // pop view controller
+                        self.navigationController?.popViewController(animated: false)
                         
                     } else {
                         self.displayAlert("No Connection", alertString: "You must have internet connection to edit services.")
@@ -429,33 +436,33 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         self.present(editServicesAlertController, animated: true, completion: nil)
     }
     
-    //function for sending email
-    func sendEmail(subjectString: String, messageBody: String) {
-        let composeVC = MFMailComposeViewController()
-        composeVC.mailComposeDelegate = self
-        // Configure the fields of the interface.
-        composeVC.setToRecipients([currentBusinessEmail, userEmail])
-        composeVC.setSubject(subjectString)
-        composeVC.setMessageBody(messageBody, isHTML: false)
-        // Present the view controller modally.
-        self.present(composeVC, animated: true, completion: nil)
-        print("EmailSent")
-    }
-    
     func mailComposeController(_ controller: MFMailComposeViewController,
                                didFinishWith result: MFMailComposeResult, error: Error?) {
         // Check the result or perform other tasks.
         
-        //Remove data from Firebase
-        let ref = Database.database().reference().child("vehicles").child("\(currentID)")
-        ref.removeValue()
-        // Dismiss the mail compose view controller.
-        controller.dismiss(animated: true, completion: { (success) -> Void in
-            //pop back to vehicle list screen
-            self.navigationController?.popViewController(animated: true)
-        })
-        
-        
+        if result == .cancelled {
+            controller.dismiss(animated: true, completion: { (success) -> Void in
+                
+            })
+        } else {
+            
+            if emailsComplete {
+                
+                //Remove data from Firebase
+                let ref = Database.database().reference().child("vehicles").child("\(currentID)")
+                ref.removeValue()
+                // Dismiss the mail compose view controller.
+                controller.dismiss(animated: true, completion: { (success) -> Void in
+                    //pop back to vehicle list screen
+                    self.navigationController?.popViewController(animated: true)
+                })
+                
+            } else {
+                controller.dismiss(animated: true, completion: { (success) -> Void in
+                    self.sendCustomerEmail()
+                })
+            }
+        }
     }
     
     //function for displaying alert and handling vehicle completion
@@ -481,8 +488,59 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
                     
                     let dateString = formatter.string(from: Date())
                     
-                    //Actually send email
-                    self.sendEmail(subjectString: "\(self.userFirstName) \(self.userLastName)'s vehicle completed", messageBody: "Vehicle Completed\n\nCustomer Name: \(self.userFirstName) \(self.userLastName)\n\nMake: \(self.userMake) | Model: \(self.userModel) | Year: \(self.userYear)\n\nVin Number: \(self.userVin)\n\nCompletion Time: \(dateString)\n\nMain Service Performed: \(self.mainService)\n\nMileage: \(self.userMileage)\n\nAdditional Notes: \(self.noteText)")
+                    //Create XML document
+                    let xmlDocument = AEXMLDocument()
+                    let attributes = ["xmlns:xsi" : "http://www.w3.org/2001/XMLSchema-instance", "xmlns:xsd" : "http://www.w3.org/2001/XMLSchema"]
+                    let customerData = xmlDocument.addChild(name: "customer", attributes: attributes)
+                    customerData.addChild(name: "customerName", value: "\(self.userFirstName) \(self.userLastName)")
+                    customerData.addChild(name: "vehicleMake", value: self.userMake)
+                    customerData.addChild(name: "vehicleModel", value: self.userModel)
+                    customerData.addChild(name: "vehicleYear", value: self.userYear)
+                    customerData.addChild(name: "vehicleMileage", value: self.userMileage)
+                    customerData.addChild(name: "vehicleVIN", value: self.userVin)
+                    customerData.addChild(name: "completionDate", value: dateString)
+                    customerData.addChild(name: "mainServices", value: self.mainService)
+                    customerData.addChild(name: "notes", value: self.noteText)
+                    
+                    //Create JSON document
+                    let jsonObject: NSMutableDictionary = NSMutableDictionary()
+                    jsonObject.setValue("\(self.userFirstName) \(self.userLastName)", forKey: "customerName")
+                    jsonObject.setValue(self.userMake, forKey: "vehicleMake")
+                    jsonObject.setValue(self.userModel, forKey: "vehicleModel")
+                    jsonObject.setValue(self.userYear, forKey: "vehicleYear")
+                    jsonObject.setValue(self.userMileage, forKey: "vehicleMileage")
+                    jsonObject.setValue(self.userVin, forKey: "vehicleVIN")
+                    jsonObject.setValue(dateString, forKey: "completionDate")
+                    jsonObject.setValue(self.mainService, forKey: "mainServices")
+                    jsonObject.setValue(self.noteText, forKey: "notes")
+                    
+                    var jsonData: Data!
+                    
+                    do {
+                        jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: JSONSerialization.WritingOptions()) as Data!
+                        
+                    } catch _ {
+                        print ("JSON Failure")
+                    }
+                    
+                    
+                    
+                    self.delayWithSeconds(1){
+                        //Actually send email
+                        let composeVC = MFMailComposeViewController()
+                        composeVC.mailComposeDelegate = self
+                        // Configure the fields of the interface.
+                        composeVC.setToRecipients([currentBusinessEmail])
+                        composeVC.setSubject("\(self.userFirstName) \(self.userLastName)'s vehicle completed")
+                        composeVC.setMessageBody("Vehicle Completed\n\nCustomer Name: \(self.userFirstName) \(self.userLastName)\n\nMake: \(self.userMake) | Model: \(self.userModel) | Year: \(self.userYear)\n\nMileage: \(self.userMileage)\n\nVin Number: \(self.userVin)\n\nCompletion Time: \(dateString)\n\nMain Service Performed: \(self.mainService)\n\nAdditional Notes: \(self.noteText)", isHTML: false)
+                        //Attach XML file
+                        composeVC.addAttachmentData(xmlDocument.xml.data(using: .utf8)!, mimeType: "application/xml", fileName: "XMLDoc")
+                        //Attach JSON file
+                        composeVC.addAttachmentData(jsonData, mimeType: "application/json", fileName: "JSONDoc")
+                        // Present the view controller modally.
+                        self.present(composeVC, animated: true, completion: nil)
+                        
+                    }
                 }
                 
             } else {
@@ -508,6 +566,26 @@ class ChecklistViewController: UIViewController, UITableViewDataSource, UITableV
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
             completion()
         }
+    }
+    
+    func sendCustomerEmail () {
+        emailsComplete = true
+        let formatter = DateFormatter()
+        formatter.dateStyle = DateFormatter.Style.short
+        formatter.timeStyle = .medium
+        
+        let dateString = formatter.string(from: Date())
+        
+        //Actually send email
+        let composeVC = MFMailComposeViewController()
+        composeVC.mailComposeDelegate = self
+        // Configure the fields of the interface.
+        composeVC.setToRecipients([self.userEmail])
+        composeVC.setSubject("Your vehicle has been completed!")
+        composeVC.setMessageBody(" \(self.userFirstName),\n\nWe've finished work on your \(self.userMake) on \(dateString). Please find notes and recommendations on your vehicle below.\n\n\nNotes: \(self.noteText)", isHTML: false)
+        
+        // Present the view controller modally.
+        self.present(composeVC, animated: true, completion: nil)
     }
     
     //Function to check connection availability

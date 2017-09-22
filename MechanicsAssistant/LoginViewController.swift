@@ -35,11 +35,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         activityIndicator.isHidden = true
+        
+        //Setup text field delegate
         emailField.delegate = self
         passwordField.delegate = self
         IDField.delegate = self
         locationField.delegate = self
         
+        //Check local storage for business ID and location. If exists, populate text fields
         if currentBusinessID == "" || currentBusinessLocation == "" {
             let defaults = UserDefaults.standard
             if let businessIDFromStorage = defaults.string(forKey: "currentBusiness") {
@@ -62,6 +65,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        //remove Firebase observers
         let ref = Database.database().reference(withPath: "businesses")
         ref.removeAllObservers()
         super.viewWillDisappear(animated)
@@ -84,6 +88,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func loginButtonPressed(_ sender: UIButton) {
+        //start activity indicator
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
         //remove error labels
@@ -110,6 +115,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         //if either field is empty or the email field is an invalid email...
         if enteredUN == "" || enteredPW == "" || enteredID == "" || enteredLocation == "" || !isValidEmail(testStr: enteredUN!) || (enteredPW?.characters.count)! < 7{
+            //remove activity indicator
             activityIndicator.stopAnimating()
             activityIndicator.isHidden = true
             
@@ -170,6 +176,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                     //If login successful...
                     if error == nil {
                         
+                        //store ID and location fields in public variables
                         currentBusinessID = self.IDField.text!
                         currentBusinessLocation = self.locationField.text!
                         
@@ -185,8 +192,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 businesses.append(item as! DataSnapshot)
                             }
                             
+                            //setup business error variable
                             var shouldShowBusinessError = true
                             
+                            //find correlating businesses and store information to local storage
                             self.delayWithSeconds(1) {
                                 for item in businesses {
                                     let value = item.value as? NSDictionary
@@ -199,8 +208,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                         defaults.set(value?["email"] as? String ?? "", forKey: "currentEmail")
                                         currentBusinessEmail = value?["email"] as? String ?? ""
                                         
+                                        //remove activity indicator
                                         self.activityIndicator.stopAnimating()
                                         self.activityIndicator.isHidden = true
+                                        
                                         //move to DataViewController
                                         self.performSegue(withIdentifier: "SuccessfulLogin", sender: sender)
                                         
@@ -210,6 +221,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                     }
                                 }
                                 
+                                //if there's no correlating business, show error
                                 if shouldShowBusinessError {
                                     self.activityIndicator.stopAnimating()
                                     self.activityIndicator.isHidden = true

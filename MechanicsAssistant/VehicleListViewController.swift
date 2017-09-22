@@ -39,7 +39,10 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        // Hide activity indicator
         activityIndicator.isHidden = true
+        
+        //Get business information if app skipped login view
         if currentBusinessID == "" || currentBusinessLocation == "" {
             let defaults = UserDefaults.standard
             if let businessIDFromStorage = defaults.string(forKey: "currentBusiness") {
@@ -67,7 +70,7 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
     
     override func viewDidAppear(_ animated: Bool) {
         
-        
+        //start activity indicator
         activityIndicator.startAnimating()
         activityIndicator.isHidden = false
         
@@ -84,7 +87,7 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
                 self.tempVehicles.append(item as! DataSnapshot)
             }
             
-            
+            // add all vehicles that are created within this business
             self.delayWithSeconds(1) {
                 for item in self.tempVehicles {
                     let value = item.value as? NSDictionary
@@ -235,9 +238,11 @@ class VehicleListViewController: UIViewController, UITableViewDataSource, UITabl
         let confirmAction = UIAlertAction(title: "Confirm", style: .default) { (_) in
             let ref = Database.database().reference().child("vehicles").child("\(currentID)")
             ref.removeValue()
+            //start activity indicator
             self.activityIndicator.startAnimating()
             self.activityIndicator.isHidden = false
             
+            //reload data and stop activity indicator
             self.delayWithSeconds(1){
                 self.tableView.reloadData()
                 self.activityIndicator.stopAnimating()

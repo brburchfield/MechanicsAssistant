@@ -36,13 +36,14 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
         // Hide the navigation bar on the this view controller
         self.navigationController?.setNavigationBarHidden(true, animated: true)
         
-        //TODO: Check to see if business exists and get business email
+        //Check to see if business exists and get business email
         let ref = Database.database().reference(withPath: "businesses").child(currentBusinessToEdit)
         
+        // Get business associated with owner account
         ref.observe(.value, with: { (snapshot) -> Void in
-          
             let value = snapshot.value as? NSDictionary
             
+            // Populate text fields with the information
             self.businessNameField.text = value?["name"] as? String ?? ""
             self.businessEmailField.text = value?["email"] as? String ?? ""
             self.businessIDField.text = value?["id"] as? String ?? ""
@@ -54,6 +55,7 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
             let decodedimage = UIImage(data: dataDecoded)
             self.logoView.image = decodedimage
             
+            //Set background color and picker selection to correlate with pre-existing business color
             let colorString = value?["color"] as? String ?? ""
             let colorInt = Int(colorString)
             self.colorPicker.selectRow(colorInt!, inComponent: 0, animated: false)
@@ -107,6 +109,7 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
         return pickerDataSource[row]
     }
     
+    //Set background to correlate with picker view selection
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         if row == 0 {
             backgroundImage.image = UIImage(named: "BackgroundBlue")
@@ -133,6 +136,7 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
         }
     }
     
+    //Set image view to input logo
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
             logoView.image = pickedImage
@@ -154,8 +158,10 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
     
     @IBAction func submitButtonPressed(_ sender: UIButton) {
         
+        // Check for errors
         if self.ownerEmailField.text! == "" || self.businessNameField.text! == "" || self.businessEmailField.text == "" || self.businessIDField.text == "" || self.logoView.image == nil || !self.isInternetAvailable() || !self.isValidEmail(testStr: self.businessEmailField.text!) {
             
+            // Handle errors
             if self.ownerEmailField.text == "" {
                 self.showTextFieldPlaceholder(textfield: self.ownerEmailField, placeholderString: "Add owner email")
             }
@@ -184,8 +190,6 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
                 self.displayAlert("No Connection", alertString: "You must be connected to the internet to edit a business.")
             }
             
-            
-            
         } else {
             
             //Encode input image
@@ -209,20 +213,25 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
                     return
                 } else {
                     
+                    // Send new ID email
                     self.sendEmail(subjectString: "Your business ID", messageBody: "Thank you for using Mechanic's Assistant!\n\nYour business ID is:\n\n\(self.businessIDField.text!)\n\nPlease keep this on file. This will be your key to sign in to the employee and lobby applications. If you have any issues or questions, please email us at info@mechanicsassistant.com.")
                     
                 }
                 
             } else {
+                
                 self.logoView.image = nil
                 //Show image too large alert
                 self.displayAlert("Invalid Logo", alertString: "The logo file you've provided is too large. Please add a smaller image and try again.")
+                
             }
+            
         }
         
     }
     
     @IBAction func uploadImageButtonPressed(_ sender: UIButton) {
+        // Present image picker
         imagePicker.allowsEditing = false
         imagePicker.sourceType = .photoLibrary
         

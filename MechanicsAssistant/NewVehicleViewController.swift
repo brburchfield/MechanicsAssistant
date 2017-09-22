@@ -70,6 +70,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
         
     }
     
+    //remove Firebase observers
     override func viewWillDisappear(_ animated: Bool) {
         let vehicleRef = Database.database().reference(withPath: "vehicles")
         let customerRef = Database.database().reference(withPath: "customers")
@@ -156,6 +157,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     if (firstNameTextField.text?.characters.count)! > 30 || (lastNameTextField.text?.characters.count)! > 30 || (makeTextField.text?.characters.count)! > 23 || (modelTextField.text?.characters.count)! > 20 ||
                         (yearTextField.text?.characters.count)! != 4 || (colorTextField.text?.characters.count)! > 20 || (aptTextField.text?.characters.count)! > 20 || (cityTextField.text?.characters.count)! > 30 || (stateTextField.text?.characters.count)! > 2 || (addressTextField.text?.characters.count)! > 40 || (zipTextField.text?.characters.count)! != 5 || (phoneTextField.text?.characters.count)! != 10 || !isValidEmail(testStr: emailTextField.text!) || (vinTextField.text?.characters.count)! < 11 || (vinTextField.text?.characters.count)! > 17 || (mileageTextField.text?.characters.count)! > 7 {
                         
+                        // Handle errors
                         if (firstNameTextField.text?.characters.count)! > 30 {
                             showTextFieldPlaceholder(textfield: firstNameTextField, placeholderString: "Must be less than 30 characters")
                         }
@@ -241,9 +243,7 @@ class NewVehicleViewController: UIViewController, UITextFieldDelegate {
                     
                     //Create multiple items for services (if applicable)
                     let serviceArray = servicesTextField.text?.components(separatedBy: ", ")
-                    
                     var childNumber = 0
-                    
                     for item in serviceArray! {
                         let thisRef = refServices.child("serviceNumber\(childNumber)")
                         thisRef.setValue(item)

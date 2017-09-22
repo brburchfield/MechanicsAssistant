@@ -38,10 +38,6 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
         self.navigationController?.setNavigationBarHidden(true, animated: true)
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        
-    }
-    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
@@ -59,6 +55,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
         return pickerDataSource[row]
     }
     
+    //change background to reflect user selection
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         if row == 0 {
             backgroundImage.image = UIImage(named: "BackgroundBlue")
@@ -85,6 +82,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
         }
     }
     
+    // Set input logo to image view
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
         if let pickedImage = info[UIImagePickerControllerOriginalImage] as? UIImage {
             logoView.image = pickedImage
@@ -106,7 +104,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
     
     @IBAction func submitButtonPressed(_ sender: UIButton) {
         
-        
+        //Check for errors and handle if they exist
         if !isValidEmail(testStr: ownerEmailField.text!) || ownerEmailField.text == "" {
             
             if !isValidEmail(testStr: ownerEmailField.text!) {
@@ -161,6 +159,7 @@ class AddBusinessViewController: UIViewController, UITextFieldDelegate, UIImageP
                                     print ("Error signing out: %@", signOutError)
                                 }
                                 
+                                // Handle errors and handle if exist
                                 if self.businessNameField.text! == "" || self.businessEmailField.text == "" || self.businessIDField.text == "" || self.logoView.image == nil || !self.isInternetAvailable() || !self.isValidEmail(testStr: self.businessEmailField.text!) {
                                     
                                     

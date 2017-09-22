@@ -10,6 +10,7 @@ target 'MechanicsAssistant' do
 	pod 'Firebase/Core'
 	pod 'Firebase/Auth'
 	pod 'Firebase/Database'
+	pod 'AEXML'
   target 'MechanicsAssistantTests' do
     inherit! :search_paths
     # Pods for testing

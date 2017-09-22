@@ -89,13 +89,14 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
                         }
                         
                     }else{
+                        // Handle connection error
                         displayAlert("No Connection", alertString: "You must be connected to the internet in order to sign up")
                         passwordField.text = ""
                         confirmPasswordField.text = ""
                     }
                     
                 }else{
-                    
+                    // Handle errors
                     if passwordField.text! == confirmPasswordField.text! && (passwordField.text?.characters.count)! < 7 {
                         
                         showTextFieldPlaceholder(textfield: passwordField, placeholderString: "Password must be at least 7 characters")
@@ -106,7 +107,7 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
                         confirmPasswordField.text = ""
                         
                     }else{
-                        
+                        // Handle errors
                         showTextFieldPlaceholder(textfield: passwordField, placeholderString: "Passwords must match")
                         showTextFieldPlaceholder(textfield: confirmPasswordField, placeholderString: "Passwords must match")
                         passwordField.layer.add(shake, forKey: nil)
@@ -119,7 +120,7 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
                 }
                 
             }else{
-                
+                // Handle errors
                 showTextFieldPlaceholder(textfield: emailField, placeholderString: "Please enter a valid email")
                 emailField.layer.add(shake, forKey: nil)
                 passwordField.text = ""
@@ -128,7 +129,7 @@ class SignUpViewController: UIViewController, UITextFieldDelegate {
             }
             
         }else{
-            
+            // Handle errors
             if emailField.text == "" {
                 showTextFieldPlaceholder(textfield: emailField, placeholderString: "Please enter email")
             }

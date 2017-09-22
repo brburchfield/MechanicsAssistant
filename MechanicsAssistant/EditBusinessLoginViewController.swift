@@ -46,6 +46,7 @@ class EditBusinessLoginViewController:  UIViewController, UITextFieldDelegate, U
     
     @IBAction func loginButtonPressed(_ sender: UIButton) {
         
+        // Check for errors and handle if exist
         if !isValidEmail(testStr: ownerEmailField.text!) || ownerPasswordField.text == "" {
             
             if ownerEmailField.text == "" {
@@ -84,6 +85,7 @@ class EditBusinessLoginViewController:  UIViewController, UITextFieldDelegate, U
                             
                             var shouldShowBusinessError = true
                             
+                            // Set public variables to corresponding business info
                             self.delayWithSeconds(1) {
                                 for item in businesses {
                                     let value = item.value as? NSDictionary
@@ -96,6 +98,7 @@ class EditBusinessLoginViewController:  UIViewController, UITextFieldDelegate, U
                                     }
                                 }
                                 
+                                // Handle business error
                                 if shouldShowBusinessError {
                                     self.displayAlert("No such business/location", alertString: "There is no business with that value in the database.")
                                     do {
