@@ -95,6 +95,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         emailErrorLabel.text = ""
         passwordErrorLabel.text = ""
         IDErrorLabel.text = ""
+        locationErrorLabel.text = ""
         
         //create shake animation
         let shake = CAKeyframeAnimation( keyPath:"transform" )
