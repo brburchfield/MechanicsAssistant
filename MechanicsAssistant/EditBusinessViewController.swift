@@ -159,9 +159,14 @@ class EditBusinessViewController: UIViewController, UITextFieldDelegate, UIImage
     @IBAction func submitButtonPressed(_ sender: UIButton) {
         
         // Check for errors
-        if self.ownerEmailField.text! == "" || self.businessNameField.text! == "" || self.businessEmailField.text == "" || self.businessIDField.text == "" || self.logoView.image == nil || !self.isInternetAvailable() || !self.isValidEmail(testStr: self.businessEmailField.text!) {
+        if self.ownerEmailField.text! == "" || !self.isValidEmail(testStr: self.ownerEmailField.text!) || self.businessNameField.text! == "" || self.businessEmailField.text == "" || self.businessIDField.text == "" || self.logoView.image == nil || !self.isInternetAvailable() || !self.isValidEmail(testStr: self.businessEmailField.text!) {
             
             // Handle errors
+            
+            if !self.isValidEmail(testStr: self.ownerEmailField.text!){
+                self.showTextFieldPlaceholder(textfield: self.ownerEmailField, placeholderString: "Not a valid email")
+            }
+            
             if self.ownerEmailField.text == "" {
                 self.showTextFieldPlaceholder(textfield: self.ownerEmailField, placeholderString: "Add owner email")
             }
